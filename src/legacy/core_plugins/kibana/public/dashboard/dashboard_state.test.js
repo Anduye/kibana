@@ -18,10 +18,7 @@
  */
 
 import { DashboardStateManager } from './dashboard_state_manager';
-import { DashboardViewMode } from './dashboard_view_mode';
-import { embeddableIsInitialized, setPanels } from './actions';
 import { getAppStateMock, getSavedDashboardMock } from './__tests__';
-import { store } from '../store';
 
 jest.mock('ui/chrome', () => ({ getKibanaVersion: () => '6.0.0' }), { virtual: true });
 
@@ -33,7 +30,6 @@ describe('DashboardState', function () {
     time: {},
     setTime: function (time) { this.time = time; },
   };
-  const mockIndexPattern = { id: 'index1' };
 
   function initDashboardState() {
     dashboardState = new DashboardStateManager({
@@ -96,49 +92,15 @@ describe('DashboardState', function () {
     });
 
     test('getIsDirty is true if isDirty is true and editing', () => {
-      dashboardState.switchViewMode(DashboardViewMode.EDIT);
+      dashboardState.switchViewMode(ViewMode.EDIT);
       dashboardState.isDirty = true;
       expect(dashboardState.getIsDirty()).toBeTruthy();
     });
 
     test('getIsDirty is false if isDirty is true and editing', () => {
-      dashboardState.switchViewMode(DashboardViewMode.VIEW);
+      dashboardState.switchViewMode(ViewMode.VIEW);
       dashboardState.isDirty = true;
       expect(dashboardState.getIsDirty()).toBeFalsy();
-    });
-  });
-
-  describe('panelIndexPatternMapping', function () {
-    beforeAll(() => {
-      initDashboardState();
-    });
-
-    function simulateNewEmbeddableWithIndexPatterns({ panelId, indexPatterns }) {
-      store.dispatch(setPanels({ [panelId]: { panelIndex: panelId } }));
-      const metadata = { title: 'my embeddable title', editUrl: 'editme', indexPatterns };
-      store.dispatch(embeddableIsInitialized({ metadata, panelId: panelId }));
-    }
-
-    test('initially has no index patterns', () => {
-      expect(dashboardState.getPanelIndexPatterns().length).toBe(0);
-    });
-
-    test('registers index pattern when an embeddable is initialized with one', async () => {
-      simulateNewEmbeddableWithIndexPatterns({ panelId: 'foo1', indexPatterns: [mockIndexPattern] });
-      await new Promise(resolve => process.nextTick(resolve));
-      expect(dashboardState.getPanelIndexPatterns().length).toBe(1);
-    });
-
-    test('registers unique index patterns', async () => {
-      simulateNewEmbeddableWithIndexPatterns({ panelId: 'foo2', indexPatterns: [mockIndexPattern] });
-      await new Promise(resolve => process.nextTick(resolve));
-      expect(dashboardState.getPanelIndexPatterns().length).toBe(1);
-    });
-
-    test('does not register undefined index pattern for panels with no index pattern', async () => {
-      simulateNewEmbeddableWithIndexPatterns({ panelId: 'foo2' });
-      await new Promise(resolve => process.nextTick(resolve));
-      expect(dashboardState.getPanelIndexPatterns().length).toBe(1);
     });
   });
 });
